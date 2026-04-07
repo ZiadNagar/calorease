@@ -68,9 +68,6 @@ export interface ProfileFormData {
   bodyFat?: number;
 }
 
-// Legacy alias for backward compatibility
-export type AssessmentFormData = ProfileFormData;
-
 export interface MealPlan {
   daily_portions: {
     total_units: number;

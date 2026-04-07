@@ -234,15 +234,3 @@ export const FOOD_GROUPS: Record<FoodGroupKey, FoodGroupWithItems> = {
     ],
   },
 };
-
-export const getFoodItems = (groupId: FoodGroupKey): FoodItem[] => {
-  return FOOD_GROUPS[groupId]?.items ?? [];
-};
-
-export const getGroupName = (
-  groupId: FoodGroupKey,
-  locale: "en" | "ar" = "en"
-): string => {
-  const group = FOOD_GROUPS[groupId];
-  return locale === "ar" ? group?.nameAr : group?.nameEn ?? groupId;
-};

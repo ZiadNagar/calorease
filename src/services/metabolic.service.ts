@@ -243,17 +243,3 @@ export const calculateFullProfile = (data: ProfileFormData): UserProfile => {
     isManual: false,
   };
 };
-
-/**
- * MetabolicService - Backward compatible class wrapper
- */
-export class MetabolicService {
-  static calculateBMR = calculateBMR;
-  static calculateTDEE = calculateTDEE;
-  static calculateTarget = calculateTarget;
-  static calculateMacros = calculateMacros;
-  static calculateBMI = calculateBMI;
-  static getBMIStatus = getBMIStatus;
-  static calculateExchangeUnits = calculateExchangeUnits;
-  static calculateFullProfile = calculateFullProfile;
-}

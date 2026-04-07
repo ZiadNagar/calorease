@@ -4,8 +4,6 @@
 
 export {
   FOOD_GROUPS,
-  getFoodItems,
-  getGroupName,
   type FoodGroupKey,
   type FoodItem,
   type FoodGroupWithItems,

@@ -11,5 +11,4 @@ export {
   getBMIStatus,
   calculateExchangeUnits,
   calculateFullProfile,
-  MetabolicService,
 } from "./metabolic.service";
