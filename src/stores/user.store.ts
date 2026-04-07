@@ -14,68 +14,85 @@ import {
   clearProfile as clearProfileCookie,
 } from "@/actions/profile.actions";
 
-const initialState = {
-  profile: null as UserProfile | null,
-  mealAssignments: {
-    breakfast: {} as Record<FoodGroupId, string>,
-    lunch: {} as Record<FoodGroupId, string>,
-    dinner: {} as Record<FoodGroupId, string>,
-    snacks: {} as Record<FoodGroupId, string>,
-  } as MealAssignments,
-  waterIntake: 0,
-  dailyIntake: [] as unknown[],
-};
+const createEmptyMealAssignments = (): MealAssignments => ({
+  breakfast: {} as Record<FoodGroupId, string>,
+  lunch: {} as Record<FoodGroupId, string>,
+  dinner: {} as Record<FoodGroupId, string>,
+  snacks: {} as Record<FoodGroupId, string>,
+});
 
-const runServerAction = async (
+const cloneMealAssignments = (
+  mealAssignments: MealAssignments,
+): MealAssignments => ({
+  breakfast: { ...mealAssignments.breakfast },
+  lunch: { ...mealAssignments.lunch },
+  dinner: { ...mealAssignments.dinner },
+  snacks: { ...mealAssignments.snacks },
+});
+
+const createInitialState = () => ({
+  profile: null as UserProfile | null,
+  mealAssignments: createEmptyMealAssignments(),
+  waterIntake: 0,
+});
+
+const initialState = createInitialState();
+
+const syncServerAction = (
   actionName: string,
   action: () => Promise<unknown>,
-): Promise<boolean> => {
-  try {
-    await action();
-    return true;
-  } catch (error) {
+  onError?: () => void,
+): void => {
+  void action().catch((error) => {
     console.error(`[UserStore] ${actionName} failed`, error);
-    return false;
-  }
+    onError?.();
+  });
 };
 
-export const useUserStore = create<UserStore>()((set) => ({
+export const useUserStore = create<UserStore>()((set, get) => ({
   ...initialState,
 
-  setProfile: async (profile: UserProfile) => {
-    const success = await runServerAction("saveProfile", () =>
-      saveProfile(profile),
-    );
-
-    if (success) {
-      set({ profile });
-    }
-
-    return success;
+  setProfile: (profile: UserProfile) => {
+    const previousProfile = get().profile;
+    set({ profile });
+    syncServerAction("saveProfile", () => saveProfile(profile), () => {
+      set({ profile: previousProfile });
+    });
   },
 
-  updateProfile: (updates: Partial<UserProfile>) =>
-    set((state) => {
-      if (!state.profile) return state;
-      const updatedProfile = { ...state.profile, ...updates };
-      void runServerAction("updateProfile", () => saveProfile(updatedProfile));
-      return { profile: updatedProfile };
-    }),
+  updateProfile: (updates: Partial<UserProfile>) => {
+    const currentProfile = get().profile;
+    if (!currentProfile) return;
 
-  updateCalorieTarget: (calories: number, macros: SimpleMacros) =>
-    set((state) => {
-      if (!state.profile) return state;
-      const updatedProfile = {
-        ...state.profile,
-        calorieTarget: calories,
-        macros,
-        isManual: true,
-      };
-      void runServerAction("updateCalorieTarget", () =>
-        saveProfile(updatedProfile),
-      );
-      return { profile: updatedProfile };
-    }),
+    const updatedProfile = { ...currentProfile, ...updates };
+    set({ profile: updatedProfile });
+
+    syncServerAction("updateProfile", () => saveProfile(updatedProfile), () => {
+      set({ profile: currentProfile });
+    });
+  },
+
+  updateCalorieTarget: (calories: number, macros: SimpleMacros) => {
+    const currentProfile = get().profile;
+    if (!currentProfile) return;
+
+    const updatedProfile = {
+      ...currentProfile,
+      calorieTarget: calories,
+      macros,
+      isManual: true,
+    };
+
+    set({ profile: updatedProfile });
+
+    syncServerAction(
+      "updateCalorieTarget",
+      () => saveProfile(updatedProfile),
+      () => {
+        set({ profile: currentProfile });
+      },
+    );
+  },
 
   setMealAssignment: (meal: MealTime, group: FoodGroupId, food: string) =>
     set((state) => ({
@@ -93,14 +110,19 @@ export const useUserStore = create<UserStore>()((set) => ({
       waterIntake: Math.max(0, (state.waterIntake || 0) + amount),
     })),
 
-  clearData: async () => {
-    const success = await runServerAction("clearProfile", clearProfileCookie);
+  clearData: () => {
+    const currentState = get();
+    const previousState = {
+      profile: currentState.profile,
+      mealAssignments: cloneMealAssignments(currentState.mealAssignments),
+      waterIntake: currentState.waterIntake,
+    };
 
-    if (success) {
-      set(initialState);
-    }
+    set(createInitialState());
 
-    return success;
+    syncServerAction("clearProfile", clearProfileCookie, () => {
+      set(previousState);
+    });
   },
 
   // New: Initialize store from cookie data (called on app load)
