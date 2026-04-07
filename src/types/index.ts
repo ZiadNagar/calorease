@@ -13,7 +13,6 @@ export type {
   ExchangeUnits,
   UserProfile,
   ProfileFormData,
-  AssessmentFormData,
   MealPlan,
   FoodGroup,
   FoodExchange,
@@ -21,7 +20,7 @@ export type {
   FoodItem,
 } from "./user.types";
 
-export { BMI_STATUS_LABELS, BMI_STATUS_COLORS } from "./user.types";
+export { BMI_STATUS_LABELS } from "./user.types";
 
 // Food exchange types
 export type { FoodGroupId, FoodGroupData, ExchangeDataMap } from "./food.types";
@@ -31,6 +30,7 @@ export type { MacroNutrient, Macros } from "./metabolic.types";
 
 // Store types
 export type {
+  MealTime,
   MealAssignments,
   UserState,
   UserActions,
