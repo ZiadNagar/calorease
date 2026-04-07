@@ -137,40 +137,9 @@ export async function getProfile(): Promise<UserProfile | null> {
 }
 
 /**
- * Server Action: Update user profile in cookie
- */
-export async function updateProfile(
-  updates: Partial<UserProfile>,
-): Promise<UserProfile | null> {
-  const currentProfile = await getProfile();
-
-  if (!currentProfile) {
-    return null;
-  }
-
-  const updatedProfile = { ...currentProfile, ...updates };
-  const parsedProfile = profileCookieSchema.safeParse(updatedProfile);
-
-  if (!parsedProfile.success) {
-    return null;
-  }
-
-  await saveProfile(parsedProfile.data as UserProfile);
-  return parsedProfile.data as UserProfile;
-}
-
-/**
  * Server Action: Clear all user data
  */
 export async function clearProfile(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
-}
-
-/**
- * Server Action: Check if user has a profile (for middleware/redirects)
- */
-export async function hasProfile(): Promise<boolean> {
-  const profile = await getProfile();
-  return profile !== null;
 }
